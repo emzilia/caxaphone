@@ -85,33 +85,52 @@ FileInfo get_file_lines(char* file_name) {
 	return file;
 }
 
-void replace_headers(FileInfo file) {
-	int number_of_headers = 0;
-	char* new_header = (char*)malloc(100 * sizeof(char));
+FileInfo replace_headers(FileInfo file) {
+	char* buffer;
+	char* new_header;
 	for (int i = 0; i < file.number_of_lines; i++) {
-		if (file.line_text[i][0] == '#' && file.line_text[i][1] == '#' && file.line_text[i][2] == '#') {
-			// H3
+		if (strncmp(file.line_text[i], HEADING3, 3) == 0) {
+		// H3
+			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
+			new_header = (char*)malloc(1000 * sizeof(char));
+
 			for (int j = 0; j < strlen(file.line_text[i]); j ++) {
-				new_header[j]  = file.line_text[i][j + 3];
+				buffer[j]  = file.line_text[i][j + 3];
 			}
+
+			strcat(new_header, H3_START);
+			strcat(new_header, buffer);
+			strcat(new_header, H3_END);
 			strcpy(file.line_text[i], new_header);
-			printf("\n%s", new_header);
-		} else if (file.line_text[i][0] == '#' && file.line_text[i][1] == '#') {
-			// H2
+		} else if (strncmp(file.line_text[i], HEADING2, 2) == 0) {
+		// H2
+			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
+			new_header = (char*)malloc(1000 * sizeof(char));
+
 			for (int j = 0; j < strlen(file.line_text[i]); j ++) {
-				new_header[j]  = file.line_text[i][j + 2];
+				buffer[j]  = file.line_text[i][j + 2];
 			}
+
+			strcat(new_header, H2_START);
+			strcat(new_header, buffer);
+			strcat(new_header, H2_END);
 			strcpy(file.line_text[i], new_header);
-			printf("\n%s", new_header);
-		} else if (file.line_text[i][0] == '#') {
-			// H1
+		} else if (strncmp(file.line_text[i], HEADING1, 1) == 0) {
+		// H1
+			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
+			new_header = (char*)malloc(1000 * sizeof(char));
+
 			for (int j = 0; j < strlen(file.line_text[i]); j ++) {
-				new_header[j]  = file.line_text[i][j + 1];
+				buffer[j]  = file.line_text[i][j + 1];
 			}
+
+			strcat(new_header, H1_START);
+			strcat(new_header, buffer);
+			strcat(new_header, H1_END);
 			strcpy(file.line_text[i], new_header);
-			printf("\n%s", new_header);
 		}
 	}
+	return file;
 }
 
 FileInfo build_html(FileInfo file) {
@@ -143,8 +162,10 @@ int main() {
 	FileInfo file;
 	file = get_file_lines("./markdown.md");
 	file = build_html(file);
+	file = replace_headers(file);
 	for (int i = 0; i < file.number_of_lines; i++) {
 		printf("%s", file.line_text[i]);
 	}
-	replace_headers(file);
+
+	exit(EXIT_SUCCESS);
 }
