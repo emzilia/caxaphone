@@ -1,0 +1,120 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// HTML tags
+#define HTML_START 	"<html>"
+#define HTML_END 	"</html>"
+
+#define H1_START	"<h1>"
+#define H1_END		"</h1>"
+
+#define H2_START	"<h2>"
+#define H2_END		"</h2>"
+
+#define H3_START	"<h3>"
+#define H3_END		"</h3>"
+
+#define PARA_START 	"<p>"
+#define PARA_END 	"</p>"
+
+#define BOLD_START 	"<b>"
+#define BOLD_END 	"</b>"
+
+#define ITALIC_START	"<em>"
+#define ITALIC_END	"</em>"
+
+// MD tags
+#define HEADING1	"#"
+#define HEADING2	"##"
+#define HEADING3	"###"
+#define HEADING4	"####"
+#define MD_ITALIC	"*"
+#define MD_BOLD		"**"
+#define MD_BOlDITALIC	"***"
+
+typedef struct FileInfo {
+	size_t	number_of_lines;
+	char**	line_text;
+} FileInfo;
+
+FileInfo get_file_lines(char* file_name) {
+	FILE* fp;
+	char* buffer = NULL;
+	size_t bufsize = 1000;
+	ssize_t read;
+
+	int lines_total = 0;
+	int len_total = 0;
+
+	fp = fopen(file_name, "r");
+	if (fp == NULL) exit(EXIT_FAILURE);
+	while ((read = getline(&buffer, &bufsize, fp)) != -1) {
+		lines_total++;
+		len_total += strlen(buffer);
+	}
+	fclose(fp);
+	free(buffer);
+
+	char* file_text[lines_total];
+
+	buffer = (char*)malloc(bufsize * sizeof(char));
+
+	fp = fopen(file_name, "r");
+	if (fp == NULL) exit(EXIT_FAILURE);
+
+	int j = 0;
+	while ((read = getline(&buffer, &bufsize, fp)) != -1) {
+		file_text[j] = (char*)malloc(bufsize * sizeof(char));
+		strcpy(file_text[j], buffer);
+		j++;
+	}
+
+	fclose(fp);
+	free(buffer);
+
+	FileInfo file = {
+		.number_of_lines = lines_total,
+		.line_text = (char**)malloc(bufsize * sizeof(char)),
+	};
+
+	for (int i = 0; i < file.number_of_lines; i++) {
+		file.line_text[i] = file_text[i];
+	}
+
+	return file;
+}
+
+FileInfo build_html(FileInfo file) {
+	int new_line_total = file.number_of_lines + 2;
+	char* html_file_lines[new_line_total];
+	html_file_lines[0] = (char*)malloc(1000 * sizeof(char));
+	html_file_lines[0] = HTML_START;
+	html_file_lines[new_line_total - 1] = (char*)malloc(1000 * sizeof(char));
+	html_file_lines[new_line_total - 1] = HTML_END;
+	for (int i = 1; i < new_line_total; i++) {
+		html_file_lines[i] = (char*)malloc(1000 * sizeof(char));
+		html_file_lines[i] = file.line_text[i - 1];
+		if (i == file.number_of_lines) break;
+	}
+
+	FileInfo new_file = {
+		.number_of_lines = new_line_total,
+		.line_text = (char**)malloc(1000 * sizeof(char)),
+	};
+
+	for (int i = 0; i < new_file.number_of_lines; i++) {
+		new_file.line_text[i] = html_file_lines[i];
+	}
+
+	return new_file;
+}
+
+int main() {
+	FileInfo file;
+	file = get_file_lines("./markdown.md");
+	file = build_html(file);
+	for (int i = 0; i < file.number_of_lines; i++) {
+		printf("%s", file.line_text[i]);
+	}
+}
