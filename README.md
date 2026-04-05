@@ -1,6 +1,6 @@
 # caxaphone
 
-TODO:
-md parser
-static website generator
+TODO:  
+md parser  
+static website generator  
 
