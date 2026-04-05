@@ -85,6 +85,35 @@ FileInfo get_file_lines(char* file_name) {
 	return file;
 }
 
+void replace_headers(FileInfo file) {
+	int number_of_headers = 0;
+	char* new_header = (char*)malloc(100 * sizeof(char));
+	for (int i = 0; i < file.number_of_lines; i++) {
+		if (file.line_text[i][0] == '#' && file.line_text[i][1] == '#' && file.line_text[i][2] == '#') {
+			// H3
+			for (int j = 0; j < strlen(file.line_text[i]); j ++) {
+				new_header[j]  = file.line_text[i][j + 3];
+			}
+			strcpy(file.line_text[i], new_header);
+			printf("\n%s", new_header);
+		} else if (file.line_text[i][0] == '#' && file.line_text[i][1] == '#') {
+			// H2
+			for (int j = 0; j < strlen(file.line_text[i]); j ++) {
+				new_header[j]  = file.line_text[i][j + 2];
+			}
+			strcpy(file.line_text[i], new_header);
+			printf("\n%s", new_header);
+		} else if (file.line_text[i][0] == '#') {
+			// H1
+			for (int j = 0; j < strlen(file.line_text[i]); j ++) {
+				new_header[j]  = file.line_text[i][j + 1];
+			}
+			strcpy(file.line_text[i], new_header);
+			printf("\n%s", new_header);
+		}
+	}
+}
+
 FileInfo build_html(FileInfo file) {
 	int new_line_total = file.number_of_lines + 2;
 	char* html_file_lines[new_line_total];
@@ -117,4 +146,5 @@ int main() {
 	for (int i = 0; i < file.number_of_lines; i++) {
 		printf("%s", file.line_text[i]);
 	}
+	replace_headers(file);
 }
