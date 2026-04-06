@@ -15,6 +15,9 @@
 #define H3_START	"<h3>"
 #define H3_END		"</h3>"
 
+#define H4_START	"<h4>"
+#define H4_END		"</h4>"
+
 #define PARA_START 	"<p>"
 #define PARA_END 	"</p>"
 
@@ -88,8 +91,23 @@ FileInfo get_file_lines(char* file_name) {
 FileInfo replace_headers(FileInfo file) {
 	char* buffer;
 	char* new_header;
+
 	for (int i = 0; i < file.number_of_lines; i++) {
-		if (strncmp(file.line_text[i], HEADING3, 3) == 0) {
+		if (strncmp(file.line_text[i], HEADING4, 4) == 0) {
+		// H4
+			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
+			new_header = (char*)malloc(1000 * sizeof(char));
+
+			for (int j = 0; j < strlen(file.line_text[i]); j ++) {
+				buffer[j]  = file.line_text[i][j + 4];
+			}
+
+			strcat(new_header, H4_START);
+			strcat(new_header, buffer);
+			strcat(new_header, H4_END);
+			strcpy(file.line_text[i], new_header);
+
+		} else if (strncmp(file.line_text[i], HEADING3, 3) == 0) {
 		// H3
 			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
 			new_header = (char*)malloc(1000 * sizeof(char));
@@ -136,10 +154,12 @@ FileInfo replace_headers(FileInfo file) {
 FileInfo build_html(FileInfo file) {
 	int new_line_total = file.number_of_lines + 2;
 	char* html_file_lines[new_line_total];
+
 	html_file_lines[0] = (char*)malloc(1000 * sizeof(char));
 	html_file_lines[0] = HTML_START;
 	html_file_lines[new_line_total - 1] = (char*)malloc(1000 * sizeof(char));
 	html_file_lines[new_line_total - 1] = HTML_END;
+
 	for (int i = 1; i < new_line_total; i++) {
 		html_file_lines[i] = (char*)malloc(1000 * sizeof(char));
 		html_file_lines[i] = file.line_text[i - 1];
@@ -163,6 +183,7 @@ int main() {
 	file = get_file_lines("./markdown.md");
 	file = build_html(file);
 	file = replace_headers(file);
+
 	for (int i = 0; i < file.number_of_lines; i++) {
 		printf("%s", file.line_text[i]);
 	}
