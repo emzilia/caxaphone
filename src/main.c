@@ -29,13 +29,13 @@
 #define ITALIC_END	"</em>"
 
 // MD tags
-#define HEADING1	"#"
-#define HEADING2	"##"
-#define HEADING3	"###"
-#define HEADING4	"####"
+#define MD_HEADING1	"#"
+#define MD_HEADING2	"##"
+#define MD_HEADING3	"###"
+#define MD_HEADING4	"####"
 #define MD_ITALIC	"*"
 #define MD_BOLD		"**"
-#define MD_BOlDITALIC	"***"
+#define MD_BOLDITALIC	"***"
 
 typedef struct FileInfo {
 	size_t	number_of_lines;
@@ -51,6 +51,7 @@ FileInfo get_file_lines(char* file_name) {
 	int lines_total = 0;
 	int len_total = 0;
 
+	// We go through the file once to get the total number of lines
 	fp = fopen(file_name, "r");
 	if (fp == NULL) exit(EXIT_FAILURE);
 	while ((read = getline(&buffer, &bufsize, fp)) != -1) {
@@ -60,18 +61,19 @@ FileInfo get_file_lines(char* file_name) {
 	fclose(fp);
 	free(buffer);
 
+	// An array of pointers is created with the size of the total number of lines
 	char* file_text[lines_total];
 
 	buffer = (char*)malloc(bufsize * sizeof(char));
 
+	// We go through the file AGAIN to actually get the content this time
 	fp = fopen(file_name, "r");
 	if (fp == NULL) exit(EXIT_FAILURE);
-
-	int j = 0;
+	int i = 0;
 	while ((read = getline(&buffer, &bufsize, fp)) != -1) {
-		file_text[j] = (char*)malloc(bufsize * sizeof(char));
-		strcpy(file_text[j], buffer);
-		j++;
+		file_text[i] = (char*)malloc(bufsize * sizeof(char));
+		strcpy(file_text[i], buffer);
+		i++;
 	}
 
 	fclose(fp);
@@ -89,7 +91,11 @@ FileInfo get_file_lines(char* file_name) {
 	return file;
 }
 
+// There's definitely a better way to do this
 FileInfo get_stdin_lines(FILE* input) {
+	// So we redirect stdout to a temp file, then we fread through stdin
+	// and print output buffer TO the temp file
+	// the temp file then gets read by the regular get_file_lines func
 	int o_stdout = dup(1);
 
 	FILE* inp;
@@ -115,19 +121,20 @@ FileInfo get_stdin_lines(FILE* input) {
 
 	fclose(stdout);
 	stdout = fp2; 
-	//close(o_stdout);
 
 	file = get_file_lines("/var/tmp/cax.input");
 
 	return file;
 }
 
+// Very straightforward but the memory allocation amounts need to be looked at
+// could probably use better string funcs too
 FileInfo replace_headers(FileInfo file) {
 	char* buffer;
 	char* new_header;
 
 	for (int i = 0; i < file.number_of_lines; i++) {
-		if (strncmp(file.line_text[i], HEADING4, 4) == 0) {
+		if (strncmp(file.line_text[i], MD_HEADING4, 4) == 0) {
 		// H4
 			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
 			new_header = (char*)malloc(1000 * sizeof(char));
@@ -141,7 +148,7 @@ FileInfo replace_headers(FileInfo file) {
 			strcat(new_header, H4_END);
 			strcpy(file.line_text[i], new_header);
 
-		} else if (strncmp(file.line_text[i], HEADING3, 3) == 0) {
+		} else if (strncmp(file.line_text[i], MD_HEADING3, 3) == 0) {
 		// H3
 			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
 			new_header = (char*)malloc(1000 * sizeof(char));
@@ -154,7 +161,7 @@ FileInfo replace_headers(FileInfo file) {
 			strcat(new_header, buffer);
 			strcat(new_header, H3_END);
 			strcpy(file.line_text[i], new_header);
-		} else if (strncmp(file.line_text[i], HEADING2, 2) == 0) {
+		} else if (strncmp(file.line_text[i], MD_HEADING2, 2) == 0) {
 		// H2
 			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
 			new_header = (char*)malloc(1000 * sizeof(char));
@@ -167,7 +174,7 @@ FileInfo replace_headers(FileInfo file) {
 			strcat(new_header, buffer);
 			strcat(new_header, H2_END);
 			strcpy(file.line_text[i], new_header);
-		} else if (strncmp(file.line_text[i], HEADING1, 1) == 0) {
+		} else if (strncmp(file.line_text[i], MD_HEADING1, 1) == 0) {
 		// H1
 			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
 			new_header = (char*)malloc(1000 * sizeof(char));
@@ -204,6 +211,7 @@ FileInfo complete_paras(FileInfo file) {
 	return file;
 }
 
+// This isn't necessarily the best way to do this either but it works
 FileInfo build_html(FileInfo file) {
 	int new_line_total = file.number_of_lines + 2;
 	char* html_file_lines[new_line_total];
