@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 
 // HTML tags
@@ -84,6 +85,39 @@ FileInfo get_file_lines(char* file_name) {
 	for (int i = 0; i < file.number_of_lines; i++) {
 		file.line_text[i] = file_text[i];
 	}
+
+	return file;
+}
+
+FileInfo get_stdin_lines(FILE* input) {
+	int o_stdout = dup(1);
+
+	FILE* inp;
+	FileInfo file;
+
+	FILE* fp = input;
+	char* buffer = NULL;
+	size_t bufsize = 1000;
+	ssize_t read;
+
+	buffer = (char*)malloc(bufsize * sizeof(char));
+
+	inp = freopen("/var/tmp/cax.input", "w", stdout);
+	if (inp == NULL) perror("fropen");
+
+	while ((read = getline(&buffer, &bufsize, fp)) != -1) {
+		printf("%s", buffer);
+	}
+
+	fclose(fp);
+
+	FILE* fp2 = fdopen(o_stdout, "w");
+
+	fclose(stdout);
+	stdout = fp2; 
+	//close(o_stdout);
+
+	file = get_file_lines("/var/tmp/cax.input");
 
 	return file;
 }
@@ -201,9 +235,13 @@ FileInfo build_html(FileInfo file) {
 	return new_file;
 }
 
-int main() {
+int main(int argc, char** argv) {
 	FileInfo file;
-	file = get_file_lines("./markdown.md");
+	if (argc > 1) {
+		file = get_file_lines(argv[1]);
+	} else {
+		file = get_stdin_lines(stdin);
+	}
 	file = build_html(file);
 	file = replace_headers(file);
 	file = complete_paras(file);
