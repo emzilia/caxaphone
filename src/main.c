@@ -139,7 +139,6 @@ FileInfo replace_headers(FileInfo file) {
 			strcat(new_header, H4_START);
 			strcat(new_header, buffer);
 			strcat(new_header, H4_END);
-			strcat(new_header, PARA_START);
 			strcpy(file.line_text[i], new_header);
 
 		} else if (strncmp(file.line_text[i], HEADING3, 3) == 0) {
@@ -154,7 +153,6 @@ FileInfo replace_headers(FileInfo file) {
 			strcat(new_header, H3_START);
 			strcat(new_header, buffer);
 			strcat(new_header, H3_END);
-			strcat(new_header, PARA_START);
 			strcpy(file.line_text[i], new_header);
 		} else if (strncmp(file.line_text[i], HEADING2, 2) == 0) {
 		// H2
@@ -168,7 +166,6 @@ FileInfo replace_headers(FileInfo file) {
 			strcat(new_header, H2_START);
 			strcat(new_header, buffer);
 			strcat(new_header, H2_END);
-			strcat(new_header, PARA_START);
 			strcpy(file.line_text[i], new_header);
 		} else if (strncmp(file.line_text[i], HEADING1, 1) == 0) {
 		// H1
@@ -182,7 +179,6 @@ FileInfo replace_headers(FileInfo file) {
 			strcat(new_header, H1_START);
 			strcat(new_header, buffer);
 			strcat(new_header, H1_END);
-			strcat(new_header, PARA_START);
 			strcpy(file.line_text[i], new_header);
 		}
 	}
@@ -196,7 +192,7 @@ FileInfo complete_paras(FileInfo file) {
 	for (int i = 0; i < file.number_of_lines; i++) {
 		int line_length = strlen(file.line_text[i]);
 
-		if (strstr(file.line_text[i], "  ")) {
+		if (file.line_text[i][0] != '#' && strstr(file.line_text[i], "  ")) {
 			new_line = (char*)malloc(2000 * sizeof(char));
 			strcat(new_line, PARA_END);
 			strcat(new_line, PARA_START);
