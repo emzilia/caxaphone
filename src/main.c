@@ -124,6 +124,8 @@ FileInfo get_stdin_lines(FILE* input) {
 
 	file = get_file_lines("/var/tmp/cax.input");
 
+	remove("/var/tmp/cax.input");
+
 	return file;
 }
 
