@@ -4,29 +4,33 @@
 #include <string.h>
 
 // HTML tags
-#define HTML_START 	"<html>"
-#define HTML_END 	"</html>"
+#define HTML_START 		"<html>"
+#define HTML_END 		"</html>"
 
-#define H1_START	"<h1>"
-#define H1_END		"</h1>"
+#define H1_START		"<h1>"
+#define H1_END			"</h1>"
 
-#define H2_START	"<h2>"
-#define H2_END		"</h2>"
+#define H2_START		"<h2>"
+#define H2_END			"</h2>"
 
-#define H3_START	"<h3>"
-#define H3_END		"</h3>"
+#define H3_START		"<h3>"
+#define H3_END			"</h3>"
 
-#define H4_START	"<h4>"
-#define H4_END		"</h4>"
+#define H4_START		"<h4>"
+#define H4_END			"</h4>"
 
-#define PARA_START 	"<p>"
-#define PARA_END 	"</p>"
+#define PARA_START 		"<p>"
+#define PARA_END 		"</p>"
 
-#define BOLD_START 	"<b>"
-#define BOLD_END 	"</b>"
+#define BOLD_START 		"<b>"
+#define BOLD_END 		"</b>"
 
-#define ITALIC_START	"<em>"
-#define ITALIC_END	"</em>"
+#define ITALIC_START		"<em>"
+#define ITALIC_END		"</em>"
+
+#define BOLDITALIC_START	"<b><em>"
+#define BOLDITALIC_END		"</b></em>"
+
 
 // MD tags
 #define MD_HEADING1	"#"
@@ -213,6 +217,142 @@ FileInfo complete_paras(FileInfo file) {
 	return file;
 }
 
+// This works but it's very ugly and I hate it
+FileInfo emphasize_text(FileInfo file) {
+	char* search_buffer = (char*)malloc(2000 * sizeof(char));
+	char* buffer = (char*)malloc(2000 * sizeof(char));
+	char* before_text = (char*)malloc(2000 * sizeof(char));
+	char* after_text = (char*)malloc(2000 * sizeof(char));
+	char* new_line = (char*)malloc(2000 * sizeof(char));
+
+	int count = 0;
+	int len = 0;
+	int line_length = 0;
+	int index1 = 0;
+	int index2 = 0;
+
+	for (int i = 0; i < file.number_of_lines; i++) {
+		len = strlen(file.line_text[i]);
+		for (int j = 0; j < len; j++) {
+			if (file.line_text[i][j] == '*') count++;
+		}
+	}
+
+	while (count > 1) {
+		for (int i = 0; i < file.number_of_lines; i++) {
+			if ((search_buffer = strstr(file.line_text[i], MD_BOLDITALIC)) != NULL) {
+				line_length = strlen(file.line_text[i]);
+				index1 = search_buffer - file.line_text[i];
+				search_buffer = NULL;
+				if (!strncmp(&file.line_text[i][index1 + 2], "*", 1)) {
+					search_buffer = (char*)malloc(2000 * sizeof(char));
+					buffer = (char*)malloc(2000 * sizeof(char));
+					before_text = (char*)malloc(2000 * sizeof(char));
+					after_text = (char*)malloc(2000 * sizeof(char));
+					new_line = (char*)malloc(2000 * sizeof(char));
+
+					if ((search_buffer = strstr(file.line_text[i] + index1 + 2, MD_BOLDITALIC)) == NULL) continue;
+					index2 = search_buffer - file.line_text[i];
+					strncpy(buffer, file.line_text[i] + index1 + 3, index2 - index1 - 2);
+
+					strncpy(before_text, file.line_text[i], index1);
+					strncpy(after_text, file.line_text[i] + index2 + 3, line_length - index2);
+
+					strcat(new_line, before_text);
+					strcat(new_line, BOLDITALIC_START);
+
+					strcat(new_line, buffer);
+					strcat(new_line, BOLDITALIC_END);
+
+					strcat(new_line, after_text);
+					strcpy(file.line_text[i], new_line);
+
+					buffer = NULL;
+					before_text = NULL;
+					after_text = NULL;
+					new_line = NULL;
+
+					count -= 6;
+				}
+			}
+
+			if ((search_buffer = strstr(file.line_text[i], MD_BOLD)) != NULL) {
+				line_length = strlen(file.line_text[i]);
+				index1 = search_buffer - file.line_text[i];
+				search_buffer = NULL;
+				 if (!strncmp(&file.line_text[i][index1 + 1], "*", 1)) {
+					search_buffer = (char*)malloc(2000 * sizeof(char));
+					buffer = (char*)malloc(2000 * sizeof(char));
+					before_text = (char*)malloc(2000 * sizeof(char));
+					after_text = (char*)malloc(2000 * sizeof(char));
+					new_line = (char*)malloc(2000 * sizeof(char));
+
+					if ((search_buffer = strstr(file.line_text[i] + index1 + 2, MD_BOLD)) == NULL) continue;
+					index2 = search_buffer - file.line_text[i];
+					strncpy(buffer, file.line_text[i] + index1 + 2, index2 - index1 - 2);
+
+					strncpy(before_text, file.line_text[i], index1);
+					strncpy(after_text, file.line_text[i] + index2 + 2, line_length - index2);
+
+					strcat(new_line, before_text);
+					strcat(new_line, BOLD_START);
+
+					strcat(new_line, buffer);
+					strcat(new_line, BOLD_END);
+
+					strcat(new_line, after_text);
+					strcpy(file.line_text[i], new_line);
+
+					buffer = NULL;
+					before_text = NULL;
+					after_text = NULL;
+					new_line = NULL;
+
+					count -= 4;
+				 }
+			}
+
+			if ((search_buffer = strstr(file.line_text[i], MD_ITALIC)) != NULL) {
+				line_length = strlen(file.line_text[i]);
+				index1 = search_buffer - file.line_text[i];
+				search_buffer = NULL;
+				if (!strncmp(&file.line_text[i][index1], "*", 1)) {
+					search_buffer = (char*)malloc(2000 * sizeof(char));
+					buffer = (char*)malloc(2000 * sizeof(char));
+					before_text = (char*)malloc(2000 * sizeof(char));
+					after_text = (char*)malloc(2000 * sizeof(char));
+					new_line = (char*)malloc(2000 * sizeof(char));
+
+					if ((search_buffer = strstr(file.line_text[i] + index1 + 1, MD_ITALIC)) == NULL) continue;
+					index2 = search_buffer - file.line_text[i];
+					strncpy(buffer, file.line_text[i] + index1 + 1, index2 - index1 - 1);
+
+					strncpy(before_text, file.line_text[i], index1);
+					strncpy(after_text, file.line_text[i] + index2 + 1, line_length - index2);
+
+					strcat(new_line, before_text);
+					strcat(new_line, ITALIC_START);
+
+					strcat(new_line, buffer);
+					strcat(new_line, ITALIC_END);
+
+					strcat(new_line, after_text);
+					strcpy(file.line_text[i], new_line);
+
+					buffer = NULL;
+					before_text = NULL;
+					after_text = NULL;
+					new_line = NULL;
+
+					count -= 2;
+				}
+			}
+		}
+	}
+
+	return file;
+}
+
 // This isn't necessarily the best way to do this either but it works
 FileInfo build_html(FileInfo file) {
 	int new_line_total = file.number_of_lines + 2;
@@ -251,6 +391,7 @@ int main(int argc, char** argv) {
 	file = build_html(file);
 	file = replace_headers(file);
 	file = complete_paras(file);
+	file = emphasize_text(file);
 
 	for (int i = 0; i < file.number_of_lines; i++) {
 		printf("%s", file.line_text[i]);
