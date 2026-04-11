@@ -1,12 +1,12 @@
 # caxaphone
 
 TODO:  
-md parser:   
+md -> html converter:   
 - ~~handle headers~~  
 - ~~handle paragraphs~~   
 - ~~handle bold + italics~~  
 - ~~handle hyperlinks~~
-- handle bullet poitns
+- handle bullet points
   
 static website generator:  
 TBD  
