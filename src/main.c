@@ -19,6 +19,11 @@
 #define H4_START                "<h4>"
 #define H4_END                  "</h4>"
 
+#define LIST_START              "<ul>"
+#define LIST_ITEM_START         "<li>"
+#define LIST_ITEM_END           "</li>"
+#define LIST_END                "</ul>"
+
 #define PARA_START              "<p>"
 #define PARA_END                "</p>"
 
@@ -35,15 +40,18 @@
 #define HYPERLINK_MIDDLE        "\">"
 #define HYPERLINK_END           "</a>"
 
-
 // MD tags
 #define MD_HEADING1             "#"
 #define MD_HEADING2             "##"
 #define MD_HEADING3             "###"
 #define MD_HEADING4             "####"
+
+#define MD_LIST                 "* "
+
 #define MD_ITALIC               "*"
 #define MD_BOLD                 "**"
 #define MD_BOLDITALIC           "***"
+
 #define MD_HYPERLINK_START      "["
 #define MD_HYPERLINK_MIDDLE     "]("
 #define MD_HYPERLINK_END        ")"
@@ -153,7 +161,7 @@ FileInfo build_headers(FileInfo file) {
 			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
 			new_header = (char*)malloc(1000 * sizeof(char));
 
-			for (int j = 0; j < strlen(file.line_text[i]); j ++) {
+			for (int j = 0; j < strlen(file.line_text[i]); j++) {
 				buffer[j]  = file.line_text[i][j + 4];
 			}
 
@@ -167,7 +175,7 @@ FileInfo build_headers(FileInfo file) {
 			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
 			new_header = (char*)malloc(1000 * sizeof(char));
 
-			for (int j = 0; j < strlen(file.line_text[i]); j ++) {
+			for (int j = 0; j < strlen(file.line_text[i]); j++) {
 				buffer[j]  = file.line_text[i][j + 3];
 			}
 
@@ -180,7 +188,7 @@ FileInfo build_headers(FileInfo file) {
 			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
 			new_header = (char*)malloc(1000 * sizeof(char));
 
-			for (int j = 0; j < strlen(file.line_text[i]); j ++) {
+			for (int j = 0; j < strlen(file.line_text[i]); j++) {
 				buffer[j]  = file.line_text[i][j + 2];
 			}
 
@@ -193,7 +201,7 @@ FileInfo build_headers(FileInfo file) {
 			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
 			new_header = (char*)malloc(1000 * sizeof(char));
 
-			for (int j = 0; j < strlen(file.line_text[i]); j ++) {
+			for (int j = 0; j < strlen(file.line_text[i]); j++) {
 				buffer[j]  = file.line_text[i][j + 1];
 			}
 
@@ -203,6 +211,105 @@ FileInfo build_headers(FileInfo file) {
 			strcpy(file.line_text[i], new_header);
 		}
 	}
+	return file;
+}
+
+FileInfo build_lists(FileInfo file) {
+	char* buffer;
+	char* list_item;
+	int count = 0;
+	int len = 0;
+
+	for (int i = 0; i < file.number_of_lines; i++) {
+		len = strlen(file.line_text[i]);
+		for (int j = 0; j < len; j++) {
+			if (file.line_text[i][j] == '*' && file.line_text[i][j + 1] == ' ') {
+				count++;
+			}
+		}
+	}
+
+	// Convert the individual list items
+	while (count > 1) {
+		for (int i = 0; i < file.number_of_lines; i++) {
+			if (strncmp(file.line_text[i], MD_LIST, 2) == 0) {
+				buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
+				list_item = (char*)malloc(1000 * sizeof(char));
+
+				for (int j = 0; j < strlen(file.line_text[i]); j++) {
+					buffer[j]  = file.line_text[i][j + 2];
+				}
+
+				strcat(list_item, LIST_ITEM_START);
+				strcat(list_item, buffer);
+				strcat(list_item, LIST_ITEM_END);
+				strcpy(file.line_text[i], list_item);
+
+				buffer = NULL;
+				list_item = NULL;
+
+				count--;
+			}
+		}
+	}
+
+	// Add the unordered list starting tag before the list items
+	for (int i = 0; i < file.number_of_lines; i++) {
+		if (!strstr(file.line_text[i], LIST_ITEM_END)) {
+			if (i == file.number_of_lines - 1) break;
+			if (strstr(file.line_text[i + 1], LIST_ITEM_START)) {
+				buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
+				list_item = (char*)malloc(1000 * sizeof(char));
+
+				strcpy(buffer, file.line_text[i]);
+
+				strcat(list_item, LIST_START);
+				strcat(list_item, buffer);
+				strcpy(file.line_text[i], list_item);
+
+				buffer = NULL;
+				list_item = NULL;
+			}
+		}
+	}
+
+	// Add the unordered list ending tag after the list items
+	for (int i = 0; i < file.number_of_lines; i++) {
+		if (strstr(file.line_text[i], LIST_ITEM_START)) {
+			if (i == file.number_of_lines - 2) {
+				buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
+				list_item = (char*)malloc(1000 * sizeof(char));
+
+				strcpy(buffer, file.line_text[i]);
+
+				strcat(list_item, buffer);
+				strcat(list_item, LIST_END);
+				strcpy(file.line_text[i], list_item);
+
+				buffer = NULL;
+				list_item = NULL;
+
+				break;
+			}
+
+			int index = strlen(file.line_text[i + 1]);
+			char* last_five = &file.line_text[i + 1][index - 5];
+			if (strncmp(last_five, LIST_ITEM_END, 5)) {
+				buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
+				list_item = (char*)malloc(1000 * sizeof(char));
+
+				strcpy(buffer, file.line_text[i]);
+
+				strcat(list_item, buffer);
+				strcat(list_item, LIST_END);
+				strcpy(file.line_text[i], list_item);
+
+				buffer = NULL;
+				list_item = NULL;
+			}
+		}
+	}
+
 	return file;
 }
 
@@ -482,6 +589,7 @@ int main(int argc, char** argv) {
 	}
 	file = build_html(file);
 	file = build_headers(file);
+	file = build_lists(file);
 	file = build_paras(file);
 	file = build_emphasis(file);
 	file = build_hyperlinks(file);

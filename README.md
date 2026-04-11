@@ -6,7 +6,7 @@ md -> html converter:
 - ~~handle paragraphs~~   
 - ~~handle bold + italics~~  
 - ~~handle hyperlinks~~
-- handle bullet points
+- ~~handle bullet points~~
   
 static website generator:  
 TBD  
