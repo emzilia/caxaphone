@@ -4,42 +4,50 @@
 #include <string.h>
 
 // HTML tags
-#define HTML_START 		"<html>"
-#define HTML_END 		"</html>"
+#define HTML_START              "<html>"
+#define HTML_END                "</html>"
 
-#define H1_START		"<h1>"
-#define H1_END			"</h1>"
+#define H1_START                "<h1>"
+#define H1_END                  "</h1>"
 
-#define H2_START		"<h2>"
-#define H2_END			"</h2>"
+#define H2_START                "<h2>"
+#define H2_END                  "</h2>"
 
-#define H3_START		"<h3>"
-#define H3_END			"</h3>"
+#define H3_START                "<h3>"
+#define H3_END                  "</h3>"
 
-#define H4_START		"<h4>"
-#define H4_END			"</h4>"
+#define H4_START                "<h4>"
+#define H4_END                  "</h4>"
 
-#define PARA_START 		"<p>"
-#define PARA_END 		"</p>"
+#define PARA_START              "<p>"
+#define PARA_END                "</p>"
 
-#define BOLD_START 		"<b>"
-#define BOLD_END 		"</b>"
+#define BOLD_START              "<b>"
+#define BOLD_END                "</b>"
 
-#define ITALIC_START		"<em>"
-#define ITALIC_END		"</em>"
+#define ITALIC_START            "<em>"
+#define ITALIC_END              "</em>"
 
-#define BOLDITALIC_START	"<b><em>"
-#define BOLDITALIC_END		"</b></em>"
+#define BOLDITALIC_START        "<b><em>"
+#define BOLDITALIC_END          "</b></em>"
+
+#define HYPERLINK_START         "<a href=\""
+#define HYPERLINK_MIDDLE        "\">"
+#define HYPERLINK_END           "</a>"
 
 
 // MD tags
-#define MD_HEADING1	"#"
-#define MD_HEADING2	"##"
-#define MD_HEADING3	"###"
-#define MD_HEADING4	"####"
-#define MD_ITALIC	"*"
-#define MD_BOLD		"**"
-#define MD_BOLDITALIC	"***"
+#define MD_HEADING1             "#"
+#define MD_HEADING2             "##"
+#define MD_HEADING3             "###"
+#define MD_HEADING4             "####"
+#define MD_ITALIC               "*"
+#define MD_BOLD                 "**"
+#define MD_BOLDITALIC           "***"
+#define MD_HYPERLINK_START      "["
+#define MD_HYPERLINK_MIDDLE     "]("
+#define MD_HYPERLINK_END        ")"
+
 
 typedef struct FileInfo {
 	size_t	number_of_lines;
@@ -354,6 +362,79 @@ FileInfo build_emphasis(FileInfo file) {
 }
 
 FileInfo build_hyperlinks(FileInfo file) {
+	char* search_buffer = (char*)malloc(2000 * sizeof(char));
+	char* urltext_buffer = (char*)malloc(2000 * sizeof(char));
+	char* url_buffer = (char*)malloc(2000 * sizeof(char));
+	char* before_text = (char*)malloc(2000 * sizeof(char));
+	char* after_text = (char*)malloc(2000 * sizeof(char));
+	char* new_line = (char*)malloc(2000 * sizeof(char));
+
+	int count = 0;
+	int len = 0;
+	int line_length = 0;
+	int index1 = 0;
+	int index2 = 0;
+	int index3 = 0;
+
+	for (int i = 0; i < file.number_of_lines; i++) {
+		len = strlen(file.line_text[i]);
+		for (int j = 0; j < len; j++) {
+			if (file.line_text[i][j] == '[') count++;
+		}
+	}
+
+	while (count > 1) {
+		for (int i = 0; i < file.number_of_lines; i++) {
+			if ((search_buffer = strstr(file.line_text[i], MD_HYPERLINK_START)) != NULL) {
+				line_length = strlen(file.line_text[i]);
+				index1 = search_buffer - file.line_text[i];
+				search_buffer = NULL;
+				search_buffer = (char*)malloc(2000 * sizeof(char));
+				urltext_buffer = (char*)malloc(2000 * sizeof(char));
+				url_buffer = (char*)malloc(2000 * sizeof(char));
+				before_text = (char*)malloc(2000 * sizeof(char));
+				after_text = (char*)malloc(2000 * sizeof(char));
+				new_line = (char*)malloc(2000 * sizeof(char));
+
+				if ((search_buffer = strstr(file.line_text[i] + index1 + 1, MD_HYPERLINK_MIDDLE)) == NULL) continue;
+				index2 = search_buffer - file.line_text[i];
+				strncpy(urltext_buffer, file.line_text[i] + index1 + 1, index2 - index1 - 1);
+				//printf("\n\n%s\n\n", urltext_buffer);
+
+				if ((search_buffer = strstr(file.line_text[i] + index2 + 1, MD_HYPERLINK_END)) == NULL) continue;
+				index3 = search_buffer - file.line_text[i];
+				strncpy(url_buffer, file.line_text[i] + index2 + 2, index3 - index2 - 2);
+				//printf("\n\n%s\n\n", urltext_buffer);
+
+
+				strncpy(before_text, file.line_text[i], index1);
+				strncpy(after_text, file.line_text[i] + index3 + 1, line_length - index2);
+
+				strcat(new_line, before_text);
+				strcat(new_line, HYPERLINK_START);
+
+				strcat(new_line, url_buffer);
+				strcat(new_line, HYPERLINK_MIDDLE);
+				strcat(new_line, urltext_buffer);
+				strcat(new_line, HYPERLINK_END);
+
+				strcat(new_line, after_text);
+				strcpy(file.line_text[i], new_line);
+				//printf("\n\n%s\n\n", new_line);
+				//exit(0);
+
+				urltext_buffer = NULL;
+				url_buffer = NULL;
+				before_text = NULL;
+				after_text = NULL;
+				new_line = NULL;
+
+				count--;
+				}
+			}
+		}
+//	}
+
 
 	return file;
 }
@@ -397,6 +478,7 @@ int main(int argc, char** argv) {
 	file = build_headers(file);
 	file = build_paras(file);
 	file = build_emphasis(file);
+	file = build_hyperlinks(file);
 
 	for (int i = 0; i < file.number_of_lines; i++) {
 		printf("%s", file.line_text[i]);
