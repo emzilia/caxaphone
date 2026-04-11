@@ -135,7 +135,7 @@ FileInfo get_stdin_lines(FILE* input) {
 
 // Very straightforward but the memory allocation amounts need to be looked at
 // could probably use better string funcs too
-FileInfo replace_headers(FileInfo file) {
+FileInfo build_headers(FileInfo file) {
 	char* buffer;
 	char* new_header;
 
@@ -198,7 +198,7 @@ FileInfo replace_headers(FileInfo file) {
 	return file;
 }
 
-FileInfo complete_paras(FileInfo file) {
+FileInfo build_paras(FileInfo file) {
 	char* buffer;
 	char* new_line;
 
@@ -218,7 +218,7 @@ FileInfo complete_paras(FileInfo file) {
 }
 
 // This works but it's very ugly and I hate it
-FileInfo emphasize_text(FileInfo file) {
+FileInfo build_emphasis(FileInfo file) {
 	char* search_buffer = (char*)malloc(2000 * sizeof(char));
 	char* buffer = (char*)malloc(2000 * sizeof(char));
 	char* before_text = (char*)malloc(2000 * sizeof(char));
@@ -353,6 +353,11 @@ FileInfo emphasize_text(FileInfo file) {
 	return file;
 }
 
+FileInfo build_hyperlinks(FileInfo file) {
+
+	return file;
+}
+
 // This isn't necessarily the best way to do this either but it works
 FileInfo build_html(FileInfo file) {
 	int new_line_total = file.number_of_lines + 2;
@@ -389,9 +394,9 @@ int main(int argc, char** argv) {
 		file = get_stdin_lines(stdin);
 	}
 	file = build_html(file);
-	file = replace_headers(file);
-	file = complete_paras(file);
-	file = emphasize_text(file);
+	file = build_headers(file);
+	file = build_paras(file);
+	file = build_emphasis(file);
 
 	for (int i = 0; i < file.number_of_lines; i++) {
 		printf("%s", file.line_text[i]);
