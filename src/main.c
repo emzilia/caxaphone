@@ -205,11 +205,11 @@ FileInfo build_paras(FileInfo file) {
 	for (int i = 0; i < file.number_of_lines; i++) {
 		int line_length = strlen(file.line_text[i]);
 
-		if (file.line_text[i][0] != '#' && strstr(file.line_text[i], "  ")) {
+		if (strstr(file.line_text[i], "  ")) {
 			new_line = (char*)malloc(2000 * sizeof(char));
-			strcat(new_line, PARA_END);
 			strcat(new_line, PARA_START);
 			strcat(new_line, file.line_text[i]);
+			strcat(new_line, PARA_END);
 			strcpy(file.line_text[i], new_line);
 		}
 	}
