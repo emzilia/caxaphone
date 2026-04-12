@@ -116,6 +116,7 @@ FileInfo get_stdin_lines(FILE* input) {
 	// So we redirect stdout to a temp file, then we fread through stdin
 	// and print output buffer TO the temp file
 	// the temp file then gets read by the regular get_file_lines func
+	// stdout then gets redirected back to the terminal and the temp file removed
 	int o_stdout = dup(1);
 
 	FILE* inp;
@@ -319,7 +320,6 @@ FileInfo build_paras(FileInfo file) {
 
 	for (int i = 0; i < file.number_of_lines; i++) {
 		int line_length = strlen(file.line_text[i]);
-
 		if (strstr(file.line_text[i], "  ")) {
 			new_line = (char*)malloc(2000 * sizeof(char));
 			strcat(new_line, PARA_START);
@@ -356,7 +356,6 @@ FileInfo build_emphasis(FileInfo file) {
 	}
 
 	while (count > 1) {
-		printf("Count: %d\n", count);
 		for (int i = 0; i < file.number_of_lines; i++) {
 			if ((search_buffer = strstr(file.line_text[i], MD_BOLDITALIC)) != NULL) {
 				line_length = strlen(file.line_text[i]);
@@ -512,13 +511,9 @@ FileInfo build_hyperlinks(FileInfo file) {
 				if ((search_buffer = strstr(file.line_text[i] + index1 + 1, MD_HYPERLINK_MIDDLE)) == NULL) continue;
 				index2 = search_buffer - file.line_text[i];
 				strncpy(urltext_buffer, file.line_text[i] + index1 + 1, index2 - index1 - 1);
-				//printf("\n\n%s\n\n", urltext_buffer);
-
 				if ((search_buffer = strstr(file.line_text[i] + index2 + 1, MD_HYPERLINK_END)) == NULL) continue;
 				index3 = search_buffer - file.line_text[i];
 				strncpy(url_buffer, file.line_text[i] + index2 + 2, index3 - index2 - 2);
-				//printf("\n\n%s\n\n", urltext_buffer);
-
 
 				strncpy(before_text, file.line_text[i], index1);
 				strncpy(after_text, file.line_text[i] + index3 + 1, line_length - index2);
@@ -533,8 +528,6 @@ FileInfo build_hyperlinks(FileInfo file) {
 
 				strcat(new_line, after_text);
 				strcpy(file.line_text[i], new_line);
-				//printf("\n\n%s\n\n", new_line);
-				//exit(0);
 
 				urltext_buffer = NULL;
 				url_buffer = NULL;
@@ -543,10 +536,9 @@ FileInfo build_hyperlinks(FileInfo file) {
 				new_line = NULL;
 
 				count--;
-				}
 			}
 		}
-//	}
+	}
 
 
 	return file;
