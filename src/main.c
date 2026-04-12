@@ -219,6 +219,7 @@ FileInfo build_lists(FileInfo file) {
 	char* buffer;
 	char* list_item;
 	int count = 0;
+	int emer_count = 100;
 	int len = 0;
 
 	for (int i = 0; i < file.number_of_lines; i++) {
@@ -232,6 +233,11 @@ FileInfo build_lists(FileInfo file) {
 
 	// Convert the individual list items
 	while (count > 1) {
+		emer_count -= 1;
+		if (emer_count == 0) {
+			printf("Error: list loop failure\n");
+			exit(EXIT_FAILURE);
+		}
 		for (int i = 0; i < file.number_of_lines; i++) {
 			if (strncmp(file.line_text[i], MD_LIST, 2) == 0) {
 				buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
@@ -341,6 +347,7 @@ FileInfo build_emphasis(FileInfo file) {
 	char* new_line = (char*)malloc(2000 * sizeof(char));
 
 	int count = 0;
+	int emer_count = 0;
 	int len = 0;
 	int line_length = 0;
 	int index1 = 0;
@@ -356,6 +363,11 @@ FileInfo build_emphasis(FileInfo file) {
 	}
 
 	while (count > 1) {
+		emer_count -= 1;
+		if (emer_count == 0) {
+			printf("Error: emphasis loop failure\n");
+			exit(EXIT_FAILURE);
+		}
 		for (int i = 0; i < file.number_of_lines; i++) {
 			if ((search_buffer = strstr(file.line_text[i], MD_BOLDITALIC)) != NULL) {
 				line_length = strlen(file.line_text[i]);
@@ -495,7 +507,10 @@ FileInfo build_hyperlinks(FileInfo file) {
 
 	while (count > 1) {
 		emer_count -= 1;
-		if (emer_count == 0) exit(1);
+		if (emer_count == 0) { 
+			printf("Error: hyperlink loop failure\n");
+			exit(EXIT_FAILURE);
+		}
 		for (int i = 0; i < file.number_of_lines; i++) {
 			if ((search_buffer = strstr(file.line_text[i], MD_HYPERLINK_START)) != NULL) {
 				line_length = strlen(file.line_text[i]);
