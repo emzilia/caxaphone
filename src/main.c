@@ -224,10 +224,8 @@ FileInfo build_lists(FileInfo file) {
 
 	for (int i = 0; i < file.number_of_lines; i++) {
 		len = strlen(file.line_text[i]);
-		for (int j = 0; j < len; j++) {
-			if (file.line_text[i][j] == '*' && file.line_text[i][j + 1] == ' ') {
-				count++;
-			}
+		if (file.line_text[i][0] == '*' && file.line_text[i][1] == ' ') {
+			count++;
 		}
 	}
 
