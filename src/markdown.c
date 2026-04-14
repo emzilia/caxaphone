@@ -102,59 +102,95 @@ FileInfo build_headers(FileInfo file) {
 	for (int i = 0; i < file.number_of_lines; i++) {
 		if (strncmp(file.line_text[i], MD_HEADING4, 4) == 0) {
 		// H4
-			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
-			new_header = (char*)malloc(1000 * sizeof(char));
+			size_t new_line_length = strlen(file.line_text[i] + 1);
+			new_line_length += strlen(H4_START);
+			new_line_length += strlen(H4_END);
+
+			buffer = malloc(1 + strlen(file.line_text[i]));
+			new_header = malloc(new_line_length);
 
 			for (int j = 0; j < strlen(file.line_text[i]); j++) {
 				buffer[j]  = file.line_text[i][j + 4];
 			}
 
-			strcat(new_header, H4_START);
-			strcat(new_header, buffer);
-			strcat(new_header, H4_END);
-			strcpy(file.line_text[i], new_header);
+			strlcpy(new_header, "", sizeof(new_header));
+			strlcat(new_header, H4_START, new_line_length);
+			strlcat(new_header, buffer, new_line_length);
+			strlcat(new_header, H4_END, new_line_length);
+			file.line_text[i] = realloc(file.line_text[i], new_line_length);
+			strlcpy(file.line_text[i], new_header, new_line_length);
 
+			//free(buffer);
+			//free(new_header);
 		} else if (strncmp(file.line_text[i], MD_HEADING3, 3) == 0) {
 		// H3
-			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
-			new_header = (char*)malloc(1000 * sizeof(char));
+			size_t new_line_length = strlen(file.line_text[i] + 1);
+			new_line_length += strlen(H3_START);
+			new_line_length += strlen(H3_END);
+
+			buffer = malloc(1 + strlen(file.line_text[i]));
+			new_header = malloc(new_line_length);
 
 			for (int j = 0; j < strlen(file.line_text[i]); j++) {
 				buffer[j]  = file.line_text[i][j + 3];
 			}
 
-			strcat(new_header, H3_START);
-			strcat(new_header, buffer);
-			strcat(new_header, H3_END);
-			strcpy(file.line_text[i], new_header);
+			strlcpy(new_header, "", sizeof(new_header));
+			strlcat(new_header, H3_START, new_line_length);
+			strlcat(new_header, buffer, new_line_length);
+			strlcat(new_header, H3_END, new_line_length);
+			file.line_text[i] = realloc(file.line_text[i], new_line_length);
+			strlcpy(file.line_text[i], new_header, new_line_length);
+
+			//free(buffer);
+			//free(new_header);
 		} else if (strncmp(file.line_text[i], MD_HEADING2, 2) == 0) {
 		// H2
-			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
-			new_header = (char*)malloc(1000 * sizeof(char));
+			size_t new_line_length = strlen(file.line_text[i] + 1);
+			new_line_length += strlen(H2_START);
+			new_line_length += strlen(H2_END);
+
+			buffer = malloc(1 + strlen(file.line_text[i]));
+			new_header = malloc(new_line_length);
 
 			for (int j = 0; j < strlen(file.line_text[i]); j++) {
 				buffer[j]  = file.line_text[i][j + 2];
 			}
 
-			strcat(new_header, H2_START);
-			strcat(new_header, buffer);
-			strcat(new_header, H2_END);
-			strcpy(file.line_text[i], new_header);
+			strlcpy(new_header, "", sizeof(new_header));
+			strlcat(new_header, H2_START, new_line_length);
+			strlcat(new_header, buffer, new_line_length);
+			strlcat(new_header, H2_END, new_line_length);
+			file.line_text[i] = realloc(file.line_text[i], new_line_length);
+			strlcpy(file.line_text[i], new_header, new_line_length);
+
+			//free(buffer);
+			//free(new_header);
 		} else if (strncmp(file.line_text[i], MD_HEADING1, 1) == 0) {
 		// H1
-			buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
-			new_header = (char*)malloc(1000 * sizeof(char));
+			size_t new_line_length = strlen(file.line_text[i] + 1);
+			new_line_length += strlen(H1_START);
+			new_line_length += strlen(H1_END);
+
+			buffer = malloc(1 + strlen(file.line_text[i]));
+			new_header = malloc(new_line_length);
 
 			for (int j = 0; j < strlen(file.line_text[i]); j++) {
 				buffer[j]  = file.line_text[i][j + 1];
 			}
 
-			strcat(new_header, H1_START);
-			strcat(new_header, buffer);
-			strcat(new_header, H1_END);
-			strcpy(file.line_text[i], new_header);
+			strlcpy(new_header, "", sizeof(new_header));
+			strlcat(new_header, H1_START, new_line_length);
+			strlcat(new_header, buffer, new_line_length);
+			strlcat(new_header, H1_END, new_line_length);
+			file.line_text[i] = realloc(file.line_text[i], new_line_length);
+			strlcpy(file.line_text[i], new_header, new_line_length);
+
+			//free(buffer);
+			//free(new_header);
 		}
 	}
+
 	return file;
 }
 
@@ -262,17 +298,23 @@ FileInfo build_lists(FileInfo file) {
 }
 
 FileInfo build_paras(FileInfo file) {
-	char* buffer;
-	char* new_line;
+	char* new_line = NULL;
 
 	for (int i = 0; i < file.number_of_lines; i++) {
-		int line_length = strlen(file.line_text[i]);
+		size_t line_length = strlen(file.line_text[i]) + 1;
+		line_length += strlen(PARA_START) + 1;
+		line_length += strlen(PARA_END) + 1;
 		if (strstr(file.line_text[i], "  ")) {
-			new_line = (char*)malloc(2000 * sizeof(char));
-			strcat(new_line, PARA_START);
-			strcat(new_line, file.line_text[i]);
-			strcat(new_line, PARA_END);
-			strcpy(file.line_text[i], new_line);
+			new_line = malloc(line_length);
+			strlcpy(new_line, "", sizeof(new_line));
+			strlcat(new_line, PARA_START, line_length);
+			strlcat(new_line, file.line_text[i], line_length);
+			strlcat(new_line, PARA_END, line_length);
+			file.line_text[i] = realloc(file.line_text[i], line_length);
+			strlcpy(file.line_text[i], new_line, line_length);
+
+			new_line = NULL;
+			//free(new_line);
 		}
 	}
 
@@ -281,11 +323,11 @@ FileInfo build_paras(FileInfo file) {
 
 // This works but it's very ugly and I hate it
 FileInfo build_emphasis(FileInfo file) {
-	char* search_buffer = (char*)malloc(2000 * sizeof(char));
-	char* buffer = (char*)malloc(2000 * sizeof(char));
-	char* before_text = (char*)malloc(2000 * sizeof(char));
-	char* after_text = (char*)malloc(2000 * sizeof(char));
-	char* new_line = (char*)malloc(2000 * sizeof(char));
+	char* search_buffer = NULL;
+	char* buffer = NULL;
+	char* before_text = NULL;
+	char* after_text = NULL;
+	char* new_line = NULL;
 
 	int count = 0;
 	int emer_count = 0;
@@ -306,41 +348,54 @@ FileInfo build_emphasis(FileInfo file) {
 	while (count > 1) {
 		emer_count -= 1;
 		if (emer_count == 0) {
-			printf("Error: emphasis loop failure\n");
+			fprintf(stderr, "Error: emphasis loop failure\n");
 			exit(EXIT_FAILURE);
 		}
 		for (int i = 0; i < file.number_of_lines; i++) {
+			search_buffer = malloc(2000);
 			if ((search_buffer = strstr(file.line_text[i], MD_BOLDITALIC)) != NULL) {
 				line_length = strlen(file.line_text[i]);
 				index1 = search_buffer - file.line_text[i];
 				search_buffer = NULL;
 				if (!strncmp(&file.line_text[i][index1 + 2], "*", 1)) {
-					search_buffer = (char*)malloc(2000 * sizeof(char));
-					buffer = (char*)malloc(2000 * sizeof(char));
-					before_text = (char*)malloc(2000 * sizeof(char));
-					after_text = (char*)malloc(2000 * sizeof(char));
-					new_line = (char*)malloc(2000 * sizeof(char));
+					search_buffer = malloc(line_length);
+					buffer = malloc(line_length);
+					before_text = malloc(line_length - index1);
 
 					if ((search_buffer = strstr(file.line_text[i] + index1 + 2, MD_BOLDITALIC)) == NULL) continue;
 					index2 = search_buffer - file.line_text[i];
+					after_text = malloc(line_length - index2);
 					strncpy(buffer, file.line_text[i] + index1 + 3, index2 - index1 - 2);
+
+					size_t new_line_length = line_length + 1;
+					new_line_length += strlen(BOLDITALIC_START) + 1;
+					new_line_length += strlen(BOLDITALIC_END) + 1;
+					new_line = malloc(new_line_length);
 
 					strncpy(before_text, file.line_text[i], index1);
 					strncpy(after_text, file.line_text[i] + index2 + 3, line_length - index2);
 
+					strlcat(after_text, "", sizeof(after_text));
 					strcat(new_line, before_text);
 					strcat(new_line, BOLDITALIC_START);
-
 					strcat(new_line, buffer);
 					strcat(new_line, BOLDITALIC_END);
-
 					strcat(new_line, after_text);
+
+					file.line_text[i] = realloc(file.line_text[i], new_line_length);
 					strcpy(file.line_text[i], new_line);
 
+					search_buffer = NULL;
 					buffer = NULL;
 					before_text = NULL;
 					after_text = NULL;
 					new_line = NULL;
+
+					//free(search_buffer);
+					//free(buffer);
+					//free(before_text);
+					//free(after_text);
+					//free(new_line);
 
 					count -= 6;
 				}
@@ -351,35 +406,48 @@ FileInfo build_emphasis(FileInfo file) {
 				index1 = search_buffer - file.line_text[i];
 				search_buffer = NULL;
 				 if (!strncmp(&file.line_text[i][index1 + 1], "*", 1)) {
-					search_buffer = (char*)malloc(2000 * sizeof(char));
-					buffer = (char*)malloc(2000 * sizeof(char));
-					before_text = (char*)malloc(2000 * sizeof(char));
-					after_text = (char*)malloc(2000 * sizeof(char));
-					new_line = (char*)malloc(2000 * sizeof(char));
+					search_buffer = malloc(line_length) + 1;
+					buffer = malloc(line_length) + 1;
+					before_text = malloc(index1 + 1);
 
 					if ((search_buffer = strstr(file.line_text[i] + index1 + 2, MD_BOLD)) == NULL) continue;
 					index2 = search_buffer - file.line_text[i];
+					after_text = malloc(line_length - index2);
+
 					strncpy(buffer, file.line_text[i] + index1 + 2, index2 - index1 - 2);
+					strlcpy(before_text, "", index1 + 1);
+					strncat(before_text, file.line_text[i], index1);
+					strlcpy(after_text, file.line_text[i] + index2 + 2, index2);
 
-					strncpy(before_text, file.line_text[i], index1);
-					strncpy(after_text, file.line_text[i] + index2 + 2, line_length - index2);
+					size_t new_line_length = line_length + 1;
+					new_line_length += strlen(BOLD_START) + 1;
+					new_line_length += strlen(BOLD_END) + 1;
+					new_line = malloc(new_line_length);
 
-					strcat(new_line, before_text);
-					strcat(new_line, BOLD_START);
+					strlcpy(new_line, "", sizeof(new_line));
+					strlcat(new_line, before_text, new_line_length);
+					strlcat(new_line, BOLD_START, new_line_length);
+					strlcat(new_line, buffer, new_line_length);
+					strlcat(new_line, BOLD_END, new_line_length);
+					strlcat(new_line, after_text, new_line_length);
 
-					strcat(new_line, buffer);
-					strcat(new_line, BOLD_END);
+					file.line_text[i] = realloc(file.line_text[i], new_line_length);
+					strlcpy(file.line_text[i], new_line, new_line_length);
 
-					strcat(new_line, after_text);
-					strcpy(file.line_text[i], new_line);
-
+					search_buffer = NULL;
 					buffer = NULL;
 					before_text = NULL;
 					after_text = NULL;
 					new_line = NULL;
 
+					//free(search_buffer);
+					//free(buffer);
+					//free(before_text);
+					//free(after_text);
+					//free(new_line);
+
 					count -= 4;
-				 }
+				}
 			}
 
 			if ((search_buffer = strstr(file.line_text[i], MD_ITALIC)) != NULL) {
@@ -387,32 +455,45 @@ FileInfo build_emphasis(FileInfo file) {
 				index1 = search_buffer - file.line_text[i];
 				search_buffer = NULL;
 				if (!strncmp(&file.line_text[i][index1], "*", 1)) {
-					search_buffer = (char*)malloc(2000 * sizeof(char));
-					buffer = (char*)malloc(2000 * sizeof(char));
-					before_text = (char*)malloc(2000 * sizeof(char));
-					after_text = (char*)malloc(2000 * sizeof(char));
-					new_line = (char*)malloc(2000 * sizeof(char));
+					search_buffer = malloc(line_length);
+					buffer = malloc(line_length);
+					before_text = malloc(index1 + 1);
 
 					if ((search_buffer = strstr(file.line_text[i] + index1 + 1, MD_ITALIC)) == NULL) continue;
 					index2 = search_buffer - file.line_text[i];
+					after_text = malloc(line_length - index2);
+
 					strncpy(buffer, file.line_text[i] + index1 + 1, index2 - index1 - 1);
-
+					strlcpy(before_text, "", index1 + 1);
 					strncpy(before_text, file.line_text[i], index1);
-					strncpy(after_text, file.line_text[i] + index2 + 1, line_length - index2);
+					strlcpy(after_text, file.line_text[i] + index2 + 1, line_length - index2);
 
-					strcat(new_line, before_text);
-					strcat(new_line, ITALIC_START);
+					size_t new_line_length = line_length + 1;
+					new_line_length += strlen(BOLD_START) + 1;
+					new_line_length += strlen(BOLD_END) + 1;
+					new_line = malloc(new_line_length);
 
-					strcat(new_line, buffer);
-					strcat(new_line, ITALIC_END);
+					strlcat(new_line, "", sizeof(new_line));
+					strlcat(new_line, before_text, new_line_length);
+					strlcat(new_line, ITALIC_START, new_line_length);
+					strlcat(new_line, buffer, new_line_length);
+					strlcat(new_line, ITALIC_END, new_line_length);
+					strlcat(new_line, after_text, new_line_length);
 
-					strcat(new_line, after_text);
-					strcpy(file.line_text[i], new_line);
+					file.line_text[i] = realloc(file.line_text[i], new_line_length);
+					strlcpy(file.line_text[i], new_line, new_line_length);
 
+					search_buffer = NULL;
 					buffer = NULL;
 					before_text = NULL;
 					after_text = NULL;
 					new_line = NULL;
+
+					//free(search_buffer);
+					//free(buffer);
+					//free(before_text);
+					//free(after_text);
+					//free(new_line);
 
 					count -= 2;
 				}
