@@ -58,6 +58,7 @@
 
 typedef struct FileInfo {
 	size_t	number_of_lines;
+	size_t	total_len;
 	char**	line_text;
 } FileInfo;
 

@@ -3,7 +3,7 @@
 FileInfo get_file_lines(char* file_name) {
 	FILE* fp;
 	char* buffer = NULL;
-	size_t bufsize = 1000;
+	size_t bufsize = 0;
 	ssize_t read;
 
 	int lines_total = 0;
@@ -21,16 +21,16 @@ FileInfo get_file_lines(char* file_name) {
 
 	// An array of pointers is created with the size of the total number of lines
 	char* file_text[lines_total];
-
-	buffer = (char*)malloc(bufsize * sizeof(char));
+	buffer = malloc(bufsize);
 
 	// We go through the file AGAIN to actually get the content this time
 	fp = fopen(file_name, "r");
 	if (fp == NULL) exit(EXIT_FAILURE);
 	int i = 0;
 	while ((read = getline(&buffer, &bufsize, fp)) != -1) {
-		file_text[i] = (char*)malloc(bufsize * sizeof(char));
-		strcpy(file_text[i], buffer);
+		size_t line_length = strlen(buffer) + 1;
+		file_text[i] = malloc(1 + strlen(buffer));
+		strlcpy(file_text[i], buffer, line_length);
 		i++;
 	}
 
@@ -39,12 +39,17 @@ FileInfo get_file_lines(char* file_name) {
 
 	FileInfo file = {
 		.number_of_lines = lines_total,
-		.line_text = (char**)malloc(bufsize * sizeof(char)),
+		.total_len = len_total,
+		.line_text = malloc(len_total * lines_total),
 	};
 
 	for (int i = 0; i < file.number_of_lines; i++) {
-		file.line_text[i] = file_text[i];
+		size_t line_length = strlen(file_text[i]) + 20;
+		file.line_text[i] = malloc(sizeof(file.line_text[i]) * line_length);
+		strlcpy(file.line_text[i], file_text[i], line_length);
 	}
+
+	buffer = NULL;
 
 	return file;
 }
@@ -62,10 +67,10 @@ FileInfo get_stdin_lines(FILE* input) {
 
 	FILE* fp = input;
 	char* buffer = NULL;
-	size_t bufsize = 1000;
+	size_t bufsize;
 	ssize_t read;
 
-	buffer = (char*)malloc(bufsize * sizeof(char));
+	buffer = malloc(bufsize);
 
 	inp = freopen("/var/tmp/cax.input", "w", stdout);
 	if (inp == NULL) perror("fropen");
@@ -498,25 +503,49 @@ FileInfo build_hyperlinks(FileInfo file) {
 FileInfo build_html(FileInfo file) {
 	int new_line_total = file.number_of_lines + 2;
 	char* html_file_lines[new_line_total];
+	size_t line_length = strlen(HTML_START) + 1;
 
-	html_file_lines[0] = (char*)malloc(1000 * sizeof(char));
-	html_file_lines[0] = HTML_START;
-	html_file_lines[new_line_total - 1] = (char*)malloc(1000 * sizeof(char));
-	html_file_lines[new_line_total - 1] = HTML_END;
+	html_file_lines[0] = malloc(line_length);
+	if (html_file_lines[0] == NULL) {
+		fprintf(stderr, "build_html 1: malloc error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	strlcpy(html_file_lines[0], HTML_START, line_length);
+	line_length = strlen(HTML_END) + 1;
+	html_file_lines[new_line_total - 1] = malloc(line_length);
+	if (html_file_lines[new_line_total - 1] == NULL) {
+		fprintf(stderr, "build_html 2: malloc error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	strlcpy(html_file_lines[new_line_total - 1], HTML_END, line_length);
 
 	for (int i = 1; i < new_line_total; i++) {
-		html_file_lines[i] = (char*)malloc(1000 * sizeof(char));
-		html_file_lines[i] = file.line_text[i - 1];
+		line_length = strlen(file.line_text[i - 1]) + 1;
+		html_file_lines[i] = malloc(line_length);
+		if (html_file_lines[i] == NULL) {
+			fprintf(stderr, "build_html 3: malloc error\n");
+			exit(EXIT_FAILURE);
+		}
+		strlcpy(html_file_lines[i], file.line_text[i - 1], line_length);
 		if (i == file.number_of_lines) break;
 	}
 
 	FileInfo new_file = {
 		.number_of_lines = new_line_total,
-		.line_text = (char**)malloc(1000 * sizeof(char)),
+		.total_len = file.total_len + 10,
+		.line_text = malloc(file.total_len * new_line_total),
 	};
 
 	for (int i = 0; i < new_file.number_of_lines; i++) {
-		new_file.line_text[i] = html_file_lines[i];
+		line_length = strlen(html_file_lines[i]) + 20;
+		new_file.line_text[i] = malloc(line_length);
+		if (new_file.line_text[i] == NULL) {
+			fprintf(stderr, "build_html 4: malloc error\n");
+			exit(EXIT_FAILURE);
+		}
+		strlcpy(new_file.line_text[i], html_file_lines[i], line_length);
 	}
 
 	return new_file;
