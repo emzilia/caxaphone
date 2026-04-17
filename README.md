@@ -7,6 +7,7 @@ md -> html converter:
 - ~~handle bold + italics~~  
 - ~~handle hyperlinks~~
 - ~~handle bullet points~~
+- fix memory issues
   
 static website generator:  
 TBD  
