@@ -93,8 +93,6 @@ FileInfo get_stdin_lines(FILE* input) {
 	return file;
 }
 
-// Very straightforward but the memory allocation amounts need to be looked at
-// could probably use better string funcs too
 FileInfo build_headers(FileInfo file) {
 	char* buffer;
 	char* new_header;
@@ -199,10 +197,8 @@ FileInfo build_lists(FileInfo file) {
 	char* list_item;
 	int count = 0;
 	int emer_count = 100;
-	int len = 0;
 
 	for (int i = 0; i < file.number_of_lines; i++) {
-		len = strlen(file.line_text[i]);
 		if (file.line_text[i][0] == '*' && file.line_text[i][1] == ' ') {
 			count++;
 		}
@@ -212,25 +208,34 @@ FileInfo build_lists(FileInfo file) {
 	while (count > 1) {
 		emer_count -= 1;
 		if (emer_count == 0) {
-			printf("Error: list loop failure\n");
+			fprintf(stderr, "Error: list loop failure\n");
 			exit(EXIT_FAILURE);
 		}
 		for (int i = 0; i < file.number_of_lines; i++) {
 			if (strncmp(file.line_text[i], MD_LIST, 2) == 0) {
-				buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
-				list_item = (char*)malloc(1000 * sizeof(char));
+
+				int line_length = strlen(file.line_text[i]) + 1;
+				int new_line_length = line_length;
+				new_line_length += strlen(LIST_ITEM_START) + 1;
+				new_line_length += strlen(LIST_ITEM_END) + 1;
+
+				buffer = malloc(line_length);
+				list_item = malloc(new_line_length);
 
 				for (int j = 0; j < strlen(file.line_text[i]); j++) {
 					buffer[j]  = file.line_text[i][j + 2];
 				}
 
-				strcat(list_item, LIST_ITEM_START);
-				strcat(list_item, buffer);
-				strcat(list_item, LIST_ITEM_END);
-				strcpy(file.line_text[i], list_item);
+				strncat(list_item, LIST_ITEM_START, strlen(LIST_ITEM_START) + 1);
+				strncat(list_item, buffer, line_length);
+				strncat(list_item, LIST_ITEM_END, strlen(LIST_ITEM_END) + 1);
+				strncpy(file.line_text[i], list_item, new_line_length);
 
 				buffer = NULL;
 				list_item = NULL;
+
+				//free(buffer);
+				//free(list_item);
 
 				count--;
 			}
@@ -242,8 +247,8 @@ FileInfo build_lists(FileInfo file) {
 		if (!strstr(file.line_text[i], LIST_ITEM_END)) {
 			if (i == file.number_of_lines - 1) break;
 			if (strstr(file.line_text[i + 1], LIST_ITEM_START)) {
-				buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
-				list_item = (char*)malloc(1000 * sizeof(char));
+				buffer = malloc(strlen(file.line_text[i]));
+				list_item = malloc(1000);
 
 				strcpy(buffer, file.line_text[i]);
 
@@ -253,6 +258,9 @@ FileInfo build_lists(FileInfo file) {
 
 				buffer = NULL;
 				list_item = NULL;
+
+				//free(buffer);
+				//free(list_item);
 			}
 		}
 	}
@@ -261,8 +269,8 @@ FileInfo build_lists(FileInfo file) {
 	for (int i = 0; i < file.number_of_lines; i++) {
 		if (strstr(file.line_text[i], LIST_ITEM_START)) {
 			if (i == file.number_of_lines - 2) {
-				buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
-				list_item = (char*)malloc(1000 * sizeof(char));
+				buffer = malloc(strlen(file.line_text[i]));
+				list_item = malloc(1000);
 
 				strcpy(buffer, file.line_text[i]);
 
@@ -272,6 +280,9 @@ FileInfo build_lists(FileInfo file) {
 
 				buffer = NULL;
 				list_item = NULL;
+
+				//free(buffer);
+				//free(list_item);
 
 				break;
 			}
@@ -279,8 +290,8 @@ FileInfo build_lists(FileInfo file) {
 			int index = strlen(file.line_text[i + 1]);
 			char* last_five = &file.line_text[i + 1][index - 5];
 			if (strncmp(last_five, LIST_ITEM_END, 5)) {
-				buffer = (char*)malloc(strlen(file.line_text[i]) * sizeof(char));
-				list_item = (char*)malloc(1000 * sizeof(char));
+				buffer = malloc(strlen(file.line_text[i]));
+				list_item = malloc(1000);
 
 				strcpy(buffer, file.line_text[i]);
 
@@ -290,6 +301,9 @@ FileInfo build_lists(FileInfo file) {
 
 				buffer = NULL;
 				list_item = NULL;
+
+				//free(buffer);
+				//free(list_item);
 			}
 		}
 	}
@@ -505,19 +519,20 @@ FileInfo build_emphasis(FileInfo file) {
 }
 
 FileInfo build_hyperlinks(FileInfo file) {
-	char* search_buffer = (char*)malloc(2000 * sizeof(char)); char* urltext_buffer = (char*)malloc(2000 * sizeof(char));
-	char* url_buffer = (char*)malloc(2000 * sizeof(char));
-	char* before_text = (char*)malloc(2000 * sizeof(char));
-	char* after_text = (char*)malloc(2000 * sizeof(char));
-	char* new_line = (char*)malloc(2000 * sizeof(char));
+	char* search_buffer; 
+	char* urltext_buffer;
+	char* url_buffer;
+	char* before_text;
+	char* after_text;
+	char* new_line;
 
 	int count = 0;
-	int emer_count = 100;
 	int len = 0;
 	int line_length = 0;
 	int index1 = 0;
 	int index2 = 0;
 	int index3 = 0;
+	int emer_count = 100;
 
 	for (int i = 0; i < file.number_of_lines; i++) {
 		len = strlen(file.line_text[i]);
@@ -529,20 +544,20 @@ FileInfo build_hyperlinks(FileInfo file) {
 	while (count > 1) {
 		emer_count -= 1;
 		if (emer_count == 0) { 
-			printf("Error: hyperlink loop failure\n");
+			fprintf(stderr, "Error: hyperlink loop failure\n");
 			exit(EXIT_FAILURE);
 		}
 		for (int i = 0; i < file.number_of_lines; i++) {
+			search_buffer = malloc(strlen(file.line_text[i])); 
 			if ((search_buffer = strstr(file.line_text[i], MD_HYPERLINK_START)) != NULL) {
 				line_length = strlen(file.line_text[i]);
 				index1 = search_buffer - file.line_text[i];
 				search_buffer = NULL;
-				search_buffer = (char*)malloc(2000 * sizeof(char));
-				urltext_buffer = (char*)malloc(2000 * sizeof(char));
-				url_buffer = (char*)malloc(2000 * sizeof(char));
-				before_text = (char*)malloc(2000 * sizeof(char));
-				after_text = (char*)malloc(2000 * sizeof(char));
-				new_line = (char*)malloc(2000 * sizeof(char));
+				search_buffer = malloc(line_length);
+				urltext_buffer = malloc(line_length);
+				url_buffer = malloc(line_length);
+				before_text = malloc(line_length);
+				after_text = malloc(line_length);
 
 				if ((search_buffer = strstr(file.line_text[i] + index1 + 1, MD_HYPERLINK_MIDDLE)) == NULL) continue;
 				index2 = search_buffer - file.line_text[i];
@@ -554,16 +569,19 @@ FileInfo build_hyperlinks(FileInfo file) {
 				strncpy(before_text, file.line_text[i], index1);
 				strncpy(after_text, file.line_text[i] + index3 + 1, line_length - index2);
 
-				strcat(new_line, before_text);
-				strcat(new_line, HYPERLINK_START);
+				line_length += strlen(urltext_buffer) + strlen(url_buffer);
+				line_length += strlen(HYPERLINK_START) + strlen(HYPERLINK_MIDDLE) + strlen(HYPERLINK_END);
+				new_line = malloc(line_length);
+				strncat(new_line, before_text, index1);
+				strncat(new_line, HYPERLINK_START, strlen(HYPERLINK_START) + 1);
 
-				strcat(new_line, url_buffer);
-				strcat(new_line, HYPERLINK_MIDDLE);
-				strcat(new_line, urltext_buffer);
-				strcat(new_line, HYPERLINK_END);
+				strncat(new_line, url_buffer, strlen(url_buffer) + 1);
+				strncat(new_line, HYPERLINK_MIDDLE, strlen(HYPERLINK_MIDDLE) + 1);
+				strncat(new_line, urltext_buffer, strlen(urltext_buffer) + 1);
+				strncat(new_line, HYPERLINK_END, strlen(HYPERLINK_END) + 1);
 
-				strcat(new_line, after_text);
-				strcpy(file.line_text[i], new_line);
+				strncat(new_line, after_text, strlen(after_text) + 1);
+				strncpy(file.line_text[i], new_line, strlen(new_line) + 1);
 
 				urltext_buffer = NULL;
 				url_buffer = NULL;
@@ -571,11 +589,17 @@ FileInfo build_hyperlinks(FileInfo file) {
 				after_text = NULL;
 				new_line = NULL;
 
+				//free(search_buffer);
+				//free(url_buffer);
+				//free(urltext_buffer);
+				//free(before_text);
+				//free(after_text);
+				//free(new_line);
+
 				count--;
 			}
 		}
 	}
-
 
 	return file;
 }
